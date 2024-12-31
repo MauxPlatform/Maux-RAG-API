@@ -1,36 +1,51 @@
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
-from app.models.embedding import Query
-from app.models.chat import ChatResponse, ChatCompletionMessage, Choice, CompletionUsage
+from app.models.chat import ChatCompletionRequest
 from app.services.rag_service import rag_service
 from app.services.openai_service import openai_service
-from app.services.response_service import map_chat_response
+import json
+
 router = APIRouter()
 
-
-
-## this route uses completion api of openai so there is no streaming and the finished response is returned
-@router.post("/completions", response_model=ChatResponse)
-async def generate_chat_completion(query: Query):
+@router.post("/chat/completions")
+async def create_chat_completion(request: ChatCompletionRequest):
     try:
-        prompt = query.prompt
-        embedding = openai_service.create_embedding(prompt)
+        # Get the last user message for context search
+        last_message = next((msg for msg in reversed(request.messages) if msg.role == "user"), None)
+        if not last_message:
+            raise HTTPException(status_code=400, detail="No user message found in the conversation")
+        
+        # Create embedding for the last user message
+        embedding = openai_service.create_embedding(last_message.content)
         search_results = rag_service.search_similar_documents(embedding)
         
+        # Build context from search results
         context = "Relevant documents:\n"
         for doc, metadata in zip(search_results['documents'][0], search_results['metadatas'][0]):
             context += f"- Content: {doc}\n"
             context += f"  Metadata: {metadata}\n"
 
-        print("\033[92m" + "context injected : " + context + "\033[0m")
-        response = rag_service.generate_response(prompt, context)
-        
-        chat_response = map_chat_response(response)
-        
-        return chat_response
+        if request.stream:
+            async def stream_response():
+                async for chunk in rag_service.generate_stream_response(
+                    messages=request.messages,
+                    context=context,
+                    model=request.model
+                ):
+                    yield f"data: {chunk}\n\n"
+                yield "data: [DONE]\n\n"
+
+            return StreamingResponse(
+                stream_response(),
+                media_type="text/event-stream"
+            )
+        # Otherwise return the complete response
+        response = rag_service.generate_response(
+            messages=request.messages,
+            context=context,
+            model=request.model
+        )
+        return response
     except Exception as e:
-        print("error in completion : ", e)
         raise HTTPException(status_code=500, detail=f"Chat completion failed: {str(e)}")
 
-        
-#TODO: create the stream route so we can use the streaming api

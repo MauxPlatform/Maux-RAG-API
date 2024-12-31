@@ -18,7 +18,12 @@ class ChromaService:
         )
 
     def create_collection(self, collection_name: str):
-        return self.client.create_collection(name=collection_name, embedding_function=self.embedding_function)
+        try:
+            return self.client.create_collection(name=collection_name, embedding_function=self.embedding_function)
+        except ValueError as e:
+            if "Collection already exists" in str(e):
+                return self.client.get_collection(name=collection_name, embedding_function=self.embedding_function)
+            raise e
 
     def get_or_create_collection(self, collection_name: str):
         return self.client.get_or_create_collection(name=collection_name, embedding_function=self.embedding_function)

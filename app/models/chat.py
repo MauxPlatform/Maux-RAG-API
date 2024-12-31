@@ -1,30 +1,13 @@
-from pydantic import BaseModel
-from typing import List, Optional
+from pydantic import BaseModel, Field
+from typing import List, Optional, Literal
 
-class ChatCompletionMessage(BaseModel):
+class ChatMessage(BaseModel):
+    role: Literal["system", "user", "assistant"]
     content: str
-    role: str
-    function_call: Optional[dict] = None
-    tool_calls: Optional[List[dict]] = None
-    refusal: Optional[dict] = None
 
-class Choice(BaseModel):
-    finish_reason: str
-    index: int
-    logprobs: Optional[dict] = None
-    message: ChatCompletionMessage
-
-class CompletionUsage(BaseModel):
-    completion_tokens: int
-    prompt_tokens: int
-    total_tokens: int
-
-class ChatResponse(BaseModel):
-    id: str
-    object: str = "chat.completion"
-    created: int
+class ChatCompletionRequest(BaseModel):
     model: str
-    choices: List[Choice]
-    usage: CompletionUsage
-    service_tier: Optional[str] = None
-    system_fingerprint: Optional[str] = None
+    messages: List[ChatMessage]
+    max_tokens: Optional[int] = None
+    stream: Optional[bool] = False
+ 
