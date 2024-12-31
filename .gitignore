@@ -1,3 +1,4 @@
 # ignore pycache
 __pycache__
 
+chroma_db
