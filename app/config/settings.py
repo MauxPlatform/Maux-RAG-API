@@ -15,7 +15,6 @@ class Settings(BaseSettings):
     SYSTEM_PROMPT: str = "You are a helpful assistant. Use the provided context to answer the user's question. If the context is not relevant, just say 'I don't know'"
     # AvalAI
     AVALAI_BASE_URL: str = "https://api.avalapis.ir/v1"
-
     PROVIDER: str = "avalai"
 
     class Config:
