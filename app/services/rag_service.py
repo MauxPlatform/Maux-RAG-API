@@ -1,5 +1,6 @@
 from app.services.chroma_service import ChromaService
 from app.services.openai_service import openai_service
+from app.services.avalai_service import AvalaiService
 import uuid
 from typing import AsyncGenerator
 import json
@@ -8,6 +9,13 @@ class RAGService:
     def __init__(self):
         self.collection_name = "RAG_COLLECTION"
         self.chroma_service = ChromaService()
+
+        if settings.PROVIDER == "openai":
+            self.provider_service = openai_service
+        elif settings.PROVIDER == "avalai":
+            self.provider_service = AvalaiService()
+        else:
+            raise ValueError("Invalid provider selected")
 
     def initialize_collection(self):
         self.chroma_service.create_collection(self.collection_name)
