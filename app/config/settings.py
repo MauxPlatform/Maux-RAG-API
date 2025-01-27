@@ -13,6 +13,11 @@ class Settings(BaseSettings):
     RAG_SEARCH_LIMIT: int = 3
     # The system prompt to use for chat completion, you can change it to make the assistant more helpful for your use case
     SYSTEM_PROMPT: str = "You are a helpful assistant. Use the provided context to answer the user's question. If the context is not relevant, just say 'I don't know'"
+    # AvalAI
+    AVALAI_BASE_URL: str = "https://api.avalapis.ir/v1"
+
+    PROVIDER: str = "avalai"
+
     class Config:
         env_file = ".env"
 
