@@ -1,0 +1,9 @@
+# ignore pycache
+__pycache__
+
+chroma_db
+
+# Environment variables
+.env
+.env.*
+!.env.example
